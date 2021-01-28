@@ -139,9 +139,9 @@ K_22_5=K_22;
 %Kinematics solving :
 % syms q1_x q1_y q1_z q2_x q2_y q2_z
 x = 0.5;y = 0.5;z = 0.5;
-[Q1_x , Q2_x] = IK_2(x, y, z, "X");
-[Q1_y , Q2_y] = IK_2(x, y, z, "Y");
-[Q1_z , Q2_z] = IK_2(x, y, z, "Z");
+[Q1_x , Q2_x] = IK_3(x, y, z, "X");
+[Q1_y , Q2_y] = IK_3(x, y, z, "Y");
+[Q1_z , Q2_z] = IK_3(x, y, z, "Z");
 % 
 % theta1_x=0;
 % theta2_x=90;
@@ -217,8 +217,8 @@ for i= 1:3
 %         0 0 0 0 0 0 0 0 0;
 %         0 0 0 0 0 0 0 I I];
   
-Q1=cell2mat(Q1_a(i));
-K_11_3=Q1*K_11*transpose(Q1);
+Q1=cell2mat(Q1_a(i))
+K_11_3=Q1*K_11*transpose(Q1)
 K_12_3=Q1*K_12*transpose(Q1);
 K_21_3=Q1*K_21*transpose(Q1);
 K_22_3=Q1*K_22*transpose(Q1);
@@ -311,18 +311,18 @@ ABCD=[matI,K_links;
       zeros(26,54),A;
       B,zeros(27,54);
       C,D;
-      zeros(6,6*8) I zeros(6,6*9)];
+      zeros(6,6*8) -I zeros(6,6*9)];
 
 AA=ABCD(1:102,1:102);
 BB=ABCD(1:102,103:108);
 CC=ABCD(103:108,1:102);
 DD=ABCD(103:108,103:108);
 
-Kc=DD-(CC*pinv(AA)*BB)
+Kc=DD-(CC*(pinv(AA)*BB))
 rank(Kc)
 Kc_all=Kc_all+Kc;
 end
-
+Kc_all
 rank(Kc_all)
 delta_t = pinv(Kc_all)*F
 mag_delta_t = delta_t(1,1)^2 + delta_t(2,1)^2 + delta_t(3,1)^2
