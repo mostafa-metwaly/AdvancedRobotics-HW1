@@ -19,35 +19,61 @@ F = [100 0 0 0 0 0]';
 L = 1;
 D = 0.15;
 R = 0.075;
-A = pi*R^2;
+A = pi*D^2/4;
 Ka = 1000000;
 Iy = (pi*D^4)/64;
 Iz = (pi*D^4)/64;
 Ip = Iz+Iy;
+link=L;
+S=A;
+J=Ip;
 
+K_11 = [E*S/link,                 0,                 0,        0,                 0,                0;
+              0, 12*E*Iz/(link^3),                 0,        0,                 0, 6*E*Iz/(link^2);
+              0,                 0, 12*E*Iy/(link^3),        0, -6*E*Iy/(link^2),                0;
+              0,                 0,                 0, G*J/link,                 0,                0;
+              0,                 0, -6*E*Iy/(link^2),        0,       4*E*Iy/link,                0;
+              0,  6*E*Iz/(link^2),                 0,        0,                 0,      4*E*Iz/link];
 
-K_11=[E*A/L 0 0 0 0 0;
-  0 12*E*Iz/L^3 0 0 0 6*E*Iz/L^2;
-  0 0 12*E*Iy/L^3 0 -6*E*Iy/L^2 0;
-  0 0 0 G*Ip/L 0 0;
-  0 0 -6*E*Iy/L^2 0 4*E*Iy/L 0;
-  0 6*E*Iz/L^2 0 0 0 4*E*Iz/L];
+K_12 = [-E*S/link,                 0,                 0,        0,                 0,                0;
+             0, -12*E*Iz/(link^3),                 0,        0,                 0, 6*E*Iz/(link^2);
+             0,                 0, -12*E*Iy/(link^3),        0, -6*E*Iy/(link^2),                0;
+             0,                 0,                 0, -G*J/link,                 0,                0;
+             0,                 0, 6*E*Iy/(link^2),        0,       2*E*Iy/link,                0;
+             0,  -6*E*Iz/(link^2),                 0,        0,                 0,      2*E*Iz/link];
 
-K_21=[-E*A/L 0 0 0 0 0;
-  0 -12*E*Iz/L^3 0 0 0 -6*E*Iz/L^2;
-  0 0 -12*E*Iy/L^3 0 6*E*Iy/L^2 0;
-  0 0 0 -G*Ip/L 0 0;
-  0 0 -6*E*Iy/L^2 0 2*E*Iy/L 0;
-  0 6*E*Iz/L^2 0 0 0 2*E*Iz/L]
+K_22 = [E*S/link,                 0,                 0,        0,                 0,                0;
+     0, 12*E*Iz/(link^3),                 0,        0,                 0, -6*E*Iz/(link^2);
+     0,                 0, 12*E*Iy/(link^3),        0, 6*E*Iy/(link^2),                0;
+     0,                 0,                 0, G*J/link,                 0,                0;
+     0,                 0, 6*E*Iy/(link^2),        0,       4*E*Iy/link,                0;
+     0, -6*E*Iz/(link^2),                 0,        0,                 0,      4*E*Iz/link];
+    
 
-K_12=transpose(K_21)
-
-K_22=[E*A/L 0 0 0 0 0;
-  0 12*E*Iz/L^3 0 0 0 -6*E*Iz/L^2;
-  0 0 12*E*Iy/L^3 0 6*E*Iy/L^2 0;
-  0 0 0 G*Ip/L 0 0;
-  0 0 6*E*Iy/L^2 0 4*E*Iy/L 0;
-  0 -6*E*Iz/L^2 0 0 0 4*E*Iz/L];
+% 
+% 
+% K_11=[E*A/L 0 0 0 0 0;
+%   0 12*E*Iz/L^3 0 0 0 6*E*Iz/L^2;
+%   0 0 12*E*Iy/L^3 0 -6*E*Iy/L^2 0;
+%   0 0 0 G*Ip/L 0 0;
+%   0 0 -6*E*Iy/L^2 0 4*E*Iy/L 0;
+%   0 6*E*Iz/L^2 0 0 0 4*E*Iz/L];
+% 
+% K_12=[-E*A/L 0 0 0 0 0;
+%   0 -12*E*Iz/L^3 0 0 0 -6*E*Iz/L^2;
+%   0 0 -12*E*Iy/L^3 0 6*E*Iy/L^2 0;
+%   0 0 0 -G*Ip/L 0 0;
+%   0 0 -6*E*Iy/L^2 0 2*E*Iy/L 0;
+%   0 6*E*Iz/L^2 0 0 0 2*E*Iz/L]
+% 
+K_21=transpose(K_12)
+% 
+% K_22=[E*A/L 0 0 0 0 0;
+%   0 12*E*Iz/L^3 0 0 0 -6*E*Iz/L^2;
+%   0 0 12*E*Iy/L^3 0 6*E*Iy/L^2 0;
+%   0 0 0 G*Ip/L 0 0;
+%   0 0 6*E*Iy/L^2 0 4*E*Iy/L 0;
+%   0 -6*E*Iz/L^2 0 0 0 4*E*Iz/L];
 
 
 I=eye(6);
@@ -318,7 +344,9 @@ BB=ABCD(1:102,103:108);
 CC=ABCD(103:108,1:102);
 DD=ABCD(103:108,103:108);
 
-Kc=DD-(CC*(pinv(AA)*BB))
+
+
+Kc=DD-(CC*(AA\BB))
 rank(Kc)
 Kc_all=Kc_all+Kc;
 end
@@ -326,4 +354,5 @@ Kc_all
 rank(Kc_all)
 delta_t = pinv(Kc_all)*F
 mag_delta_t = delta_t(1,1)^2 + delta_t(2,1)^2 + delta_t(3,1)^2
-
+Square=[];
+square = mag_delta_t;
