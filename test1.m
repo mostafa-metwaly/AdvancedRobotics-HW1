@@ -9,21 +9,21 @@ clc;
 clear all;
 
 Kc_all=0;   
+Kc_all1=0;   
 syms E A L G Iz Iy Ip Ka
-% K_active = 1000000 % actuator stiffness
-% E = 7.0000e+10 % Young's modulus
-% G = 2.5500e+10 % shear modulus
+E = 7.0000e+10 
+G = 2.5500e+10 
 
 % E = 68.9*10^9;
 % G = 26*10^9;
-% L = 1;
-% D = 0.2;
-% R = 0.1;
-% A = pi*L*R^2;
-% Ka = 1000000;
-% Iy = (pi*D^4)/64;
-% Iz = (pi*D^4)/64;
-% Ip = Iz+Iy;
+L = 1;
+D = 0.15;
+R = 0.075;
+A = pi*R^2;
+Ka = 1000000;
+Iy = (pi*D^4)/64;
+Iz = (pi*D^4)/64;
+Ip = Iz+Iy;
 
 
 K_11=[E*A/L 0 0 0 0 0;
@@ -33,14 +33,14 @@ K_11=[E*A/L 0 0 0 0 0;
   0 0 -6*E*Iy/L^2 0 4*E*Iy/L 0;
   0 6*E*Iz/L^2 0 0 0 4*E*Iz/L];
 
-K_12=[-E*A/L 0 0 0 0 0;
+K_21=[-E*A/L 0 0 0 0 0;
   0 -12*E*Iz/L^3 0 0 0 -6*E*Iz/L^2;
   0 0 -12*E*Iy/L^3 0 6*E*Iy/L^2 0;
   0 0 0 -G*Ip/L 0 0;
   0 0 -6*E*Iy/L^2 0 2*E*Iy/L 0;
   0 6*E*Iz/L^2 0 0 0 2*E*Iz/L]
 
-K_21=transpose(K_12)
+K_12=transpose(K_21)
 
 K_22=[E*A/L 0 0 0 0 0;
   0 12*E*Iz/L^3 0 0 0 -6*E*Iz/L^2;
@@ -136,59 +136,65 @@ K_12_5=K_12;
 K_21_5=K_21;
 K_22_5=K_22; 
 
-syms q1_x q1_y q1_z q2_x q2_y q2_z
-theta1_x=0;
-theta2_x=90;
+%Kinematics solving :
+% syms q1_x q1_y q1_z q2_x q2_y q2_z
+x = 0.5;y = 0.5;z = 0.5;
+[theta1_x , theta2_x] = IK(x, y, z, "X");
+[theta1_y , theta2_y] = IK(x, y, z, "Y")
+[theta1_z , theta2_z] = IK(x, y, z, "Z");
 % 
-% theta1_y=0;
-% theta2_y=90;
+% theta1_x=0;
+% theta2_x=90;
+% % 
+% theta1_y=30;
+% theta2_y=60;
 % 
 % theta1_z=0;
-% theta2_z=90;
-% 
-q1_x=[cos(theta1_x) -sin(theta1_x) 0 0 0 0;
-      sin(theta1_x) cos(theta1_x) 0 0 0 0;
-      0 0 1 0 0 0;
-      0 0 0 cos(theta1_x) -sin(theta1_x) 0;
-      0 0 0 sin(theta1_x) cos(theta1_x) 0;
-      0 0 0 0 0 1];
+% theta2_z=0;
+% % 
 
-q2_x=[cos(theta2_x) -sin(theta2_x) 0 0 0 0;
+q1_z=[1 0 0 0 0 0;
+      0 cos(theta1_x) -sin(theta1_x) 0 0 0;
+      0 sin(theta1_x) cos(theta1_x) 0 0 0;
+      0 0 0 1 0 0;
+      0 0 0 0 cos(theta1_x) -sin(theta1_x);
+      0 0 0 0 sin(theta1_x) cos(theta1_x)];
+  
+q2_z=[cos(theta2_x) -sin(theta2_x) 0 0 0 0;
       sin(theta2_x) cos(theta2_x) 0 0 0 0;
       0 0 1 0 0 0;
       0 0 0 cos(theta2_x) -sin(theta2_x) 0;
       0 0 0 sin(theta2_x) cos(theta2_x) 0;
       0 0 0 0 0 1];
   
-q1_y=[cos(0) -sin(0) 0 0 0 0 ;
-      sin(0) cos(0) 0 0 0 0;
+q1_y=[cos(theta1_y) 0 sin(theta1_y) 0 0 0 ;
+      0 1 0 0 0 0;
+      -sin(theta1_y) 0 cos(theta1_y) 0 0 0;
+      0 0 0 cos(theta1_y) 0 sin(theta1_y);
+      0 0 0 0 1 0;
+      0 0 0 -sin(theta1_y) 0 cos(theta1_y)];
+
+
+q2_y=[cos(theta2_y) 0 sin(theta2_y) 0 0 0 ;
+      0 1 0 0 0 0;
+      -sin(theta2_y) 0 cos(theta2_y) 0 0 0;
+      0 0 0 cos(theta2_y) 0 sin(theta2_y);
+      0 0 0 0 1 0;
+      0 0 0 -sin(theta2_y) 0 cos(theta2_y)];
+
+q1_x=[cos(theta1_z) -sin(theta1_z) 0 0 0 0;
+      sin(theta1_z) cos(theta1_z) 0 0 0 0;
       0 0 1 0 0 0;
-      0 0 0 cos(theta1_x) -sin(theta1_x) 0;
-      0 0 0 sin(theta1_x) cos(theta1_x) 0;
+      0 0 0 cos(theta1_z) -sin(theta1_z) 0;
+      0 0 0 sin(theta1_z) cos(theta1_z) 0;
       0 0 0 0 0 1];
 
 
-q2_y=[cos(theta2_x) -sin(theta2_x) 0 0 0 0;
-      sin(theta2_x) cos(theta2_x) 0 0 0 0;
+q2_x=[cos(theta2_z) -sin(theta2_z) 0 0 0 0;
+      sin(theta2_z) cos(theta2_z) 0 0 0 0;
       0 0 1 0 0 0;
-      0 0 0 cos(theta1_x) -sin(theta1_x) 0;
-      0 0 0 sin(theta1_x) cos(theta1_x) 0;
-      0 0 0 0 0 1];
-
-
-q1_z=[cos(0) -sin(0) 0 0 0 0;
-      sin(0) cos(0) 0 0 0 0;
-      0 0 1 0 0 0;
-      0 0 0 cos(theta1_x) -sin(theta1_x) 0;
-      0 0 0 sin(theta1_x) cos(theta1_x) 0;
-      0 0 0 0 0 1];
-
-
-q2_z=[cos(90) -sin(90) 0 0 0 0;
-      sin(90) cos(90) 0 0 0 0;
-      0 0 1 0 0 0;
-      0 0 0 cos(theta1_x) -sin(theta1_x) 0;
-      0 0 0 sin(theta1_x) cos(theta1_x) 0;
+      0 0 0 cos(theta2_z) -sin(theta2_z) 0;
+      0 0 0 sin(theta2_z) cos(theta2_z) 0;
       0 0 0 0 0 1];
 
 %rotation angles 1,2 for each joint in each chain(leg):
@@ -291,7 +297,6 @@ A = [lambda_r_12 -lambda_r_12 zeros(5,6*7);
       zeros(1,6*6) lambda_p_34 zeros(1,6*2);
       zeros(1,6*7) lambda_p_34 zeros(1,6*1)];
 %   
-lambda_e_12 = lambda_e_12_x;
 C = [lambda_e_12 zeros(1,6*8)];
 
 D = [Ka*lambda_e_12 -Ka*lambda_e_12 zeros(1,6*7)];
@@ -306,13 +311,17 @@ ABCD=[matI,K_links;
       zeros(26,54),A;
       B,zeros(27,54);
       C,D;
-      zeros(6,6*8) I zeros(6,6*9)]
+      zeros(6,6*8) I zeros(6,6*9)];
 
 AA=ABCD(1:102,1:102);
 BB=ABCD(1:102,103:108);
 CC=ABCD(103:108,1:102);
 DD=ABCD(103:108,103:108);
 
-Kc=DD-(CC*(AA\BB))
-    end
-    Kc_all=Kc_all+Kc
+Kc=DD-(CC*pinv(AA)*BB)
+rank(Kc)
+Kc_all=Kc_all+Kc;
+end
+
+rank(Kc_all)
+
