@@ -11,9 +11,9 @@ clear all;
 Kc_all=0;   
 Kc_all1=0;   
 syms E A L G Iz Iy Ip Ka
-E = 7.0000e+10 
-G = 2.5500e+10 
-
+E = 7.0000e+10 ;
+G = 2.5500e+10 ;
+F = [100 0 0 0 0 0]';
 % E = 68.9*10^9;
 % G = 26*10^9;
 L = 1;
@@ -139,67 +139,67 @@ K_22_5=K_22;
 %Kinematics solving :
 % syms q1_x q1_y q1_z q2_x q2_y q2_z
 x = 0.5;y = 0.5;z = 0.5;
-[theta1_x , theta2_x] = IK(x, y, z, "X");
-[theta1_y , theta2_y] = IK(x, y, z, "Y")
-[theta1_z , theta2_z] = IK(x, y, z, "Z");
+[Q1_x , Q2_x] = IK_2(x, y, z, "X");
+[Q1_y , Q2_y] = IK_2(x, y, z, "Y");
+[Q1_z , Q2_z] = IK_2(x, y, z, "Z");
 % 
 % theta1_x=0;
 % theta2_x=90;
-% % 
+% % 2
 % theta1_y=30;
 % theta2_y=60;
 % 
 % theta1_z=0;
 % theta2_z=0;
 % % 
-
-q1_z=[1 0 0 0 0 0;
-      0 cos(theta1_x) -sin(theta1_x) 0 0 0;
-      0 sin(theta1_x) cos(theta1_x) 0 0 0;
-      0 0 0 1 0 0;
-      0 0 0 0 cos(theta1_x) -sin(theta1_x);
-      0 0 0 0 sin(theta1_x) cos(theta1_x)];
-  
-q2_z=[cos(theta2_x) -sin(theta2_x) 0 0 0 0;
-      sin(theta2_x) cos(theta2_x) 0 0 0 0;
-      0 0 1 0 0 0;
-      0 0 0 cos(theta2_x) -sin(theta2_x) 0;
-      0 0 0 sin(theta2_x) cos(theta2_x) 0;
-      0 0 0 0 0 1];
-  
-q1_y=[cos(theta1_y) 0 sin(theta1_y) 0 0 0 ;
-      0 1 0 0 0 0;
-      -sin(theta1_y) 0 cos(theta1_y) 0 0 0;
-      0 0 0 cos(theta1_y) 0 sin(theta1_y);
-      0 0 0 0 1 0;
-      0 0 0 -sin(theta1_y) 0 cos(theta1_y)];
-
-
-q2_y=[cos(theta2_y) 0 sin(theta2_y) 0 0 0 ;
-      0 1 0 0 0 0;
-      -sin(theta2_y) 0 cos(theta2_y) 0 0 0;
-      0 0 0 cos(theta2_y) 0 sin(theta2_y);
-      0 0 0 0 1 0;
-      0 0 0 -sin(theta2_y) 0 cos(theta2_y)];
-
-q1_x=[cos(theta1_z) -sin(theta1_z) 0 0 0 0;
-      sin(theta1_z) cos(theta1_z) 0 0 0 0;
-      0 0 1 0 0 0;
-      0 0 0 cos(theta1_z) -sin(theta1_z) 0;
-      0 0 0 sin(theta1_z) cos(theta1_z) 0;
-      0 0 0 0 0 1];
-
-
-q2_x=[cos(theta2_z) -sin(theta2_z) 0 0 0 0;
-      sin(theta2_z) cos(theta2_z) 0 0 0 0;
-      0 0 1 0 0 0;
-      0 0 0 cos(theta2_z) -sin(theta2_z) 0;
-      0 0 0 sin(theta2_z) cos(theta2_z) 0;
-      0 0 0 0 0 1];
+% 
+% q1_z=[1 0 0 0 0 0;
+%       0 cos(theta1_x) -sin(theta1_x) 0 0 0;
+%       0 sin(theta1_x) cos(theta1_x) 0 0 0;
+%       0 0 0 1 0 0;
+%       0 0 0 0 cos(theta1_x) -sin(theta1_x);
+%       0 0 0 0 sin(theta1_x) cos(theta1_x)];
+%   
+% q2_z=[cos(theta2_x) -sin(theta2_x) 0 0 0 0;
+%       sin(theta2_x) cos(theta2_x) 0 0 0 0;
+%       0 0 1 0 0 0;
+%       0 0 0 cos(theta2_x) -sin(theta2_x) 0;
+%       0 0 0 sin(theta2_x) cos(theta2_x) 0;
+%       0 0 0 0 0 1];
+%   
+% q1_y=[cos(theta1_y) 0 sin(theta1_y) 0 0 0 ;
+%       0 1 0 0 0 0;
+%       -sin(theta1_y) 0 cos(theta1_y) 0 0 0;
+%       0 0 0 cos(theta1_y) 0 sin(theta1_y);
+%       0 0 0 0 1 0;
+%       0 0 0 -sin(theta1_y) 0 cos(theta1_y)];
+% 
+% 
+% q2_y=[cos(theta2_y) 0 sin(theta2_y) 0 0 0 ;
+%       0 1 0 0 0 0;
+%       -sin(theta2_y) 0 cos(theta2_y) 0 0 0;
+%       0 0 0 cos(theta2_y) 0 sin(theta2_y);
+%       0 0 0 0 1 0;
+%       0 0 0 -sin(theta2_y) 0 cos(theta2_y)];
+% 
+% q1_x=[cos(theta1_z) -sin(theta1_z) 0 0 0 0;
+%       sin(theta1_z) cos(theta1_z) 0 0 0 0;
+%       0 0 1 0 0 0;
+%       0 0 0 cos(theta1_z) -sin(theta1_z) 0;
+%       0 0 0 sin(theta1_z) cos(theta1_z) 0;
+%       0 0 0 0 0 1];
+% 
+% 
+% q2_x=[cos(theta2_z) -sin(theta2_z) 0 0 0 0;
+%       sin(theta2_z) cos(theta2_z) 0 0 0 0;
+%       0 0 1 0 0 0;
+%       0 0 0 cos(theta2_z) -sin(theta2_z) 0;
+%       0 0 0 sin(theta2_z) cos(theta2_z) 0;
+%       0 0 0 0 0 1];
 
 %rotation angles 1,2 for each joint in each chain(leg):
-Q1_a={q1_x;q1_y;q1_z};
-Q2_a={q2_x;q2_y;q2_z};
+Q1_a={Q1_x;Q1_y;Q1_z};
+Q2_a={Q2_x;Q2_y;Q2_z};
 
 
 %Aggregating all the constraints and links and joints:
@@ -324,4 +324,6 @@ Kc_all=Kc_all+Kc;
 end
 
 rank(Kc_all)
+delta_t = pinv(Kc_all)*F
+mag_delta_t = delta_t(1,1)^2 + delta_t(2,1)^2 + delta_t(3,1)^2
 
