@@ -143,7 +143,7 @@ y_all = [];
 z_all = [];
 
 for f = 1:3 
-    F = transpose(Ft(f));
+    F = transpose(Ft(f,:));
     
     for z = movement_start:step:movement_end
         for y = movement_start:step:movement_end
@@ -276,7 +276,7 @@ for f = 1:3
 
 
 
-                    Kc=DD-(CC*(inv(AA)*BB));
+                    Kc=DD-(CC*inv(AA)*BB);
                     rank(Kc);
                     Kc_all=Kc_all+Kc;
                     end
@@ -294,7 +294,11 @@ for f = 1:3
     end
     figure;
     quiver3(x_all, y_all, z_all,all_deflections_x,all_deflections_y,all_deflections_z,10,'LineWidth',2)
-%     plot3c(x_all, y_all, z_all,all_deflections,'O')
+    xlabel("X")
+    ylabel("Y")
+    zlabel("Z")
+    figure;
+    plot3c(x_all, y_all, z_all,all_deflections,'O')
     xlabel("X")
     ylabel("Y")
     zlabel("Z")
