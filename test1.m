@@ -7,14 +7,13 @@
 
 clc;
 clear all;
-close all;
+% close all;
+
+%% constants:
 
 Kc_all=0;   
-Kc_all1=0;   
-syms E A L G Iz Iy Ip Ka
 E = 7*10^10 ;
 G = 2.55*10^10;
-% F = [100 0 0 0 0 0]';
 L = 1;
 D = 0.15;
 R = 0.075;
@@ -23,12 +22,18 @@ Ka = 1000000;
 Iy = (pi*D^4)/64;
 Iz = (pi*D^4)/64;
 Ip = Iz+Iy;
+I=eye(6);
 
-tr_link = 0.000000000001;
+
+%% Platform Link
+tr_link = 0.1;
 d8e_z = [0, tr_link, 0];
 d8e_y = [tr_link*cosd(30), tr_link*cosd(-120),0];
 d8e_x = [tr_link*cosd(30+180), tr_link*cosd(120),0];
 d8ee = [d8e_x ; d8e_y ; d8e_z];
+
+
+%% Stiffness Matrix for each link
 
 K_11=[E*A/L 0 0 0 0 0;
   0 12*E*Iz/L^3 0 0 0 6*E*Iz/L^2;
@@ -54,9 +59,17 @@ K_22=[E*A/L 0 0 0 0 0;
   0 -6*E*Iz/L^2 0 0 0 4*E*Iz/L];
 
 
-I=eye(6);
+K_11_3=K_11;
+K_12_3=K_12;
+K_21_3=K_21;
+K_22_3=K_22;
+K_11_5=K_11;
+K_12_5=K_12;
+K_21_5=K_21;
+K_22_5=K_22; 
 
-%Active Elastic Joint <1,2>:
+
+%% Active Elastic Joint <1,2>:
 
 lambda_r_12_x=[0 1 0 0 0 0;
                0 0 1 0 0 0;
@@ -84,7 +97,7 @@ lambda_e_12_z=[0 0 1 0 0 0];
 lambda_r_12_a = { lambda_r_12_x ; lambda_r_12_y ; lambda_r_12_z }
 lambda_e_12_a = { lambda_e_12_x ; lambda_e_12_y ; lambda_e_12_z }
 
-%Passive joints <3,4>,<5,6>,<7,8>:
+%% Passive joints <3,4>,<5,6>,<7,8>:
 
 lambda_r_34_x=[1 0 0 0 0 0;
                0 1 0 0 0 0;
@@ -112,38 +125,17 @@ lambda_p_34_z=[0 0 0 0 0 1];
 lambda_r_34_a={lambda_r_34_x ; lambda_r_34_y ;lambda_r_34_z }
 lambda_p_34_a={lambda_p_34_x ; lambda_p_34_y ;lambda_p_34_z }
 
-K_11_3=K_11;
-K_12_3=K_12;
-K_21_3=K_21;
-K_22_3=K_22;
-K_11_5=K_11;
-K_12_5=K_12;
-K_21_5=K_21;
-K_22_5=K_22; 
+%% workspace
 
-%Kinematics solving :
-% syms q1_x q1_y q1_z q2_x q2_y q2_z
-movement_start = 0.1;
-movement_end = 0.9;
-step = 0.1;
-% number_of_points = fix((movement_end - movement_start)/step + 1)^3
-
-F_x= [1000 0 0 0 0 0];
-F_y= [0 1000 0 0 0 0];
-F_z= [0 0 1000 0 0 0];
-Ft = [F_x ; F_y ; F_z];
-
-
-
-
+Square=[];
 space_x = 1;
 space_y = 1;
 space_z = 1; % workspace size
 link = [1, 1]; % links length
 
+%% Kinematics solving :
 
-
-T_base_z = eye(4); % since the global coordinate frame coinside with the local frame of the origin of the leg Z
+T_base_z = eye(4); % is our local and global fram 
 T_base_y = Tz(space_z)*Rx(-pi/2);
 T_base_x = Ty(space_y)*Ry(pi/2)*Rz(pi);
 flag = 1; % '+1' elbow-down or '-1' elbow-up
@@ -153,6 +145,22 @@ T_base(:,:,1) = T_base_x;
 T_base(:,:,2) = T_base_y;
 T_base(:,:,3) = T_base_z;
 
+% number_of_points = fix((movement_end - movement_start)/step + 1)^3
+movement_start = 0.1;
+movement_end = 1;
+step = 0.1;
+
+%% Force Applied:
+
+F_x= [100 0 0 0 0 0];
+F_y= [0 100 0 0 0 0];
+F_z= [0 0 100 0 0 0];
+Ft = [F_x ; F_y ; F_z];
+
+
+
+
+%% Aggregating all functions:
 
 for f = 1:3 
     F = transpose(Ft(f,:));
@@ -167,6 +175,8 @@ for f = 1:3
     y_all = [];
     z_all = [];
     
+    
+
     for z = movement_start:step:movement_end
         for y = movement_start:step:movement_end
             for x = movement_start:step:movement_end
@@ -174,25 +184,15 @@ for f = 1:3
                 y_all(length(y_all)+1) = y;
                 x_all(length(x_all)+1) = x;
                 counter = counter + 1;
-%     % x = 0.5;y = 0.5;z = 0.5;
-%                 [Q1_x , Q2_x] = IK_3(x, y, z, "X");
-%                 [Q1_y , Q2_y] = IK_3(x, y, z, "Y");
-%                 [Q1_z , Q2_z] = IK_3(x, y, z, "Z");
-% 
-%     %rotation angles 1,2 for each joint in each chain(leg):
-%                 Q1_a={Q1_x;Q1_y;Q1_z};
-%                 Q2_a={Q2_x;Q2_y;Q2_z};
-% 
-%                 
                 
 
                 p_global = [x, y, z];
+                   
+                q_passive_x = IK_tri(T_base_x, p_global, tr_link, link, "X");
+                q_passive_y = IK_tri(T_base_y, p_global, tr_link, link, "Y");
+                q_passive_z = IK_tri(T_base_z, p_global, tr_link, link, "Z");
+                q_passive = [q_passive_x; q_passive_y; q_passive_z];
                 
-                q_passive = ikTripteron(T_base, p_global, link, flag);
-
-                % Q = transformStiffness(T_base, p_global, q_passive, link)
-
-
                 [Q1_a, Q2_a] = transformStiffness(T_base, p_global, q_passive, link);
 
 
@@ -212,7 +212,7 @@ for f = 1:3
                     K_11_5=Q2*K_11*transpose(Q2);
                     K_12_5=Q2*K_12*transpose(Q2);
                     K_21_5=Q2*K_21*transpose(Q2);
-                    K_22_5=Q2*K_22*transpose(Q2); 
+                    K_22_5=Q2*K_22*transpose(Q2);
 
                     d8e = d8ee(i,:);
 
@@ -223,15 +223,27 @@ for f = 1:3
                     D = [eye(3) transpose(d);
                         zeros(3) eye(3)];
 
-                    matI=[zeros(6,9*6);
-                    zeros(6,1*6), I, I, zeros(6,6*6);
-                    zeros(6,3*6) -I zeros(6,5*6);
-                    zeros(6,4*6) -I zeros(6,4*6);
-                    zeros(6,5*6) -I zeros(6,3*6);
-                    zeros(6,6*6) -I zeros(6,2*6);
-                    zeros(6,9*6);
-                    zeros(6,7*6) I I];
+%                     matI=[zeros(6,9*6);
+%                     zeros(6,1*6), I, I, zeros(6,6*6);
+%                     zeros(6,3*6) -I zeros(6,5*6);
+%                     zeros(6,4*6) -I zeros(6,4*6);
+%                     zeros(6,5*6) -I zeros(6,3*6);
+%                     zeros(6,6*6) -I zeros(6,2*6);
+%                     zeros(6,9*6);
+%                     zeros(6,7*6) I I;
+%                     zeros(6,9*6);
 %                     zeros(6,7*6) I transpose(D)];
+%                 
+                    matI=[zeros(6,10*6);
+                    zeros(6,1*6), I, I, zeros(6,7*6);
+                    zeros(6,3*6) -I zeros(6,6*6);
+                    zeros(6,4*6) -I zeros(6,5*6);
+                    zeros(6,5*6) -I zeros(6,4*6);
+                    zeros(6,6*6) -I zeros(6,3*6);
+                    zeros(6,10*6);
+                    zeros(6,7*6) I I zeros(6,1*6);
+                    zeros(6,10*6);
+                    zeros(6,8*6) I transpose(D)];
                     % 
                     %   K_links=[0 I -I 0 0 0 0 0;
                     %            0 0 0 0 0 0 0 0;
@@ -243,16 +255,26 @@ for f = 1:3
                     %            0 0 0 0 0 0 0 0];
                     %     
 
-                    K_links=[zeros(6,6*1) I -I zeros(6,6*6);
-                           zeros(6,6*9);
-                           zeros(6,6*3) K_11_3 K_12_3 zeros(6,6*4);
-                           zeros(6,6*3) K_21_3 K_22_3 zeros(6,6*4);
-                           zeros(6,6*5) K_11_5 K_12_5 zeros(6,6*2);
-                           zeros(6,6*5) K_21_5 K_22_5 zeros(6,6*2);
-                           zeros(6,6*7) I -I; %for considering a point that connects all end effector
-%                            zeros(6,6*7) D -I; %for considering a rigid
+                    K_links=[zeros(6,6*1) I -I zeros(6,6*7);
+                           zeros(6,6*10);
+                           zeros(6,6*3) K_11_3 K_12_3 zeros(6,6*5);
+                           zeros(6,6*3) K_21_3 K_22_3 zeros(6,6*5);
+                           zeros(6,6*5) K_11_5 K_12_5 zeros(6,6*3);
+                           zeros(6,6*5) K_21_5 K_22_5 zeros(6,6*3);
+                           zeros(6,6*7) I -I zeros(6,6*1); %for considering a point that connects all end effector
+                           zeros(6,6*10);
+                           zeros(6,6*8) D -I; %for considering a rigid
 %                            platform with specific lenght to center.
-                           zeros(6,6*9)];
+                           zeros(6,6*10)];
+% 
+%                     K_links=[zeros(6,6*1) I -I zeros(6,6*6);
+%                            zeros(6,6*9);
+%                            zeros(6,6*3) K_11_3 K_12_3 zeros(6,6*4);
+%                            zeros(6,6*3) K_21_3 K_22_3 zeros(6,6*4);
+%                            zeros(6,6*5) K_11_5 K_12_5 zeros(6,6*2);
+%                            zeros(6,6*5) K_21_5 K_22_5 zeros(6,6*2);
+%                            zeros(6,6*7) I -I; %for considering a point that connects all end effector
+%                            zeros(6,6*9)];
 
                     lambda_r_12=cell2mat(lambda_r_12_a(i));
                     lambda_e_12=cell2mat(lambda_e_12_a(i));
@@ -302,58 +324,76 @@ for f = 1:3
 
                     D = [Ka*lambda_e_12 -Ka*lambda_e_12 zeros(1,6*7)];
 
+%                     ABCD=[matI,K_links;
+%                           zeros(26,54),A;
+%                           B,zeros(27,54);
+%                           C,D;
+%                           zeros(6,6*8) -I zeros(6,6*9)];
+% % 
+
                     ABCD=[matI,K_links;
-                          zeros(26,54),A;
-                          B,zeros(27,54);
-                          C,D;
-                          zeros(6,6*8) -I zeros(6,6*9)];
+                          zeros(26,60),A , zeros(26,6*1);
+                          B, zeros(27,6*1),zeros(27,60);
+                          C ,zeros(1,6),D ,zeros(1,6);
+                          zeros(6,6*9) -I zeros(6,6*10)];
+% 
+%                     AA=ABCD(1:102,1:102);
+%                     BB=ABCD(1:102,103:108);
+%                     CC=ABCD(103:108,1:102);
+%                     DD=ABCD(103:108,103:108);
+                    
+                    AA=ABCD(1:114,1:114);
+                    BB=ABCD(1:114,115:120);
+                    CC=ABCD(115:120,1:114);
+                    DD=ABCD(115:120,115:120);
 
-                    AA=ABCD(1:102,1:102);
-                    BB=ABCD(1:102,103:108);
-                    CC=ABCD(103:108,1:102);
-                    DD=ABCD(103:108,103:108);
 
 
-
-                    Kc=DD-(CC*inv(AA)*BB);
+                    Kc = DD-(CC*inv(AA)*BB);
                     rank(Kc);
                     Kc_all=Kc_all+Kc;
-                    end
+                end
+                    
 
                 delta_t = inv(Kc_all)*F;
                 mag_delta_t = sqrt(delta_t(1,1)^2 + delta_t(2,1)^2 + delta_t(3,1)^2);
+                
+
                 all_deflections(counter) = mag_delta_t;
                 all_deflections_x(counter) = delta_t(1,1);
                 all_deflections_y(counter) = delta_t(2,1);
                 all_deflections_z(counter) = delta_t(3,1);
-                Square=[];
+                
                 Kc_all = 0;
                 square = mag_delta_t;
             end
         end
+        
     end
+ 
+%% Plotting:
+  
+    figure;
+    titles = ['x', 'y', 'z'];
+    scatter3(x_all, y_all, z_all,40,all_deflections,'filled')    % draw the scatter plot
+    ax = gca;
+    ax.XDir = 'reverse';
+%     view(-31,14)
+    xlabel("X")
+    ylabel("Y")
+    zlabel("Z")
+    title(sprintf("Deflections due to force in %s directions",titles(f)))
+    
+    colormap(hot);
+    cb = colorbar;                                     % create and label the colorbar
+    cb.Label.String = 'Deflections Magnitude';
+    
+%     cb = colorbar;                                     % create and label the colorbar
+%     cb.Label.String = 'Deflections Magnitude';
 %     figure;
 %     quiver3(x_all, y_all, z_all,all_deflections_x,all_deflections_y,all_deflections_z,'LineWidth',1)
 %     xlabel("X")
 %     ylabel("Y")
 %     zlabel("Z")
-%    
-    figure;
-    scatter3(x_all, y_all, z_all,40,all_deflections,'filled')    % draw the scatter plot
-    ax = gca;
-    ax.XDir = 'reverse';
-    view(-31,14)
-    xlabel("X")
-    ylabel("Y")
-    zlabel("Z")
-
-    cb = colorbar;                                     % create and label the colorbar
-    cb.Label.String = 'Deflections Magnitude';
-    
-%     figure;
-%     plot3c(x_all, y_all, z_all,all_deflections,'o')
-%     xlabel("X")
-%     ylabel("Y")
-%     zlabel("Z")
+% %  
 end
-
