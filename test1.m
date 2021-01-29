@@ -9,7 +9,6 @@ clc;
 clear all;
 close all;
 
-Square=[];
 Kc_all=0;   
 Kc_all1=0;   
 syms E A L G Iz Iy Ip Ka
@@ -24,7 +23,8 @@ Ka = 1000000;
 Iy = (pi*D^4)/64;
 Iz = (pi*D^4)/64;
 Ip = Iz+Iy;
-tr_link = 0.1;
+
+tr_link = 0.000000000001;
 d8e_z = [0, tr_link, 0];
 d8e_y = [tr_link*cosd(30), tr_link*cosd(-120),0];
 d8e_x = [tr_link*cosd(30+180), tr_link*cosd(120),0];
@@ -127,23 +127,45 @@ movement_start = 0.1;
 movement_end = 0.9;
 step = 0.1;
 % number_of_points = fix((movement_end - movement_start)/step + 1)^3
-all_deflections = [];
-all_deflections_x = [];
-all_deflections_y = [];
-all_deflections_z = [];
-counter = 0;
 
-F_x= [100 0 0 0 0 0];
-F_y= [0 100 0 0 0 0];
-F_z= [0 0 100 0 0 0];
+F_x= [1000 0 0 0 0 0];
+F_y= [0 1000 0 0 0 0];
+F_z= [0 0 1000 0 0 0];
 Ft = [F_x ; F_y ; F_z];
 
-x_all = [];
-y_all = [];
-z_all = [];
+
+
+
+space_x = 1;
+space_y = 1;
+space_z = 1; % workspace size
+link = [1, 1]; % links length
+
+
+
+T_base_z = eye(4); % since the global coordinate frame coinside with the local frame of the origin of the leg Z
+T_base_y = Tz(space_z)*Rx(-pi/2);
+T_base_x = Ty(space_y)*Ry(pi/2)*Rz(pi);
+flag = 1; % '+1' elbow-down or '-1' elbow-up
+
+
+T_base(:,:,1) = T_base_x;
+T_base(:,:,2) = T_base_y;
+T_base(:,:,3) = T_base_z;
+
 
 for f = 1:3 
     F = transpose(Ft(f,:));
+    
+    all_deflections = [];
+    all_deflections_x = [];
+    all_deflections_y = [];
+    all_deflections_z = [];
+    counter = 0;
+    
+    x_all = [];
+    y_all = [];
+    z_all = [];
     
     for z = movement_start:step:movement_end
         for y = movement_start:step:movement_end
@@ -152,27 +174,41 @@ for f = 1:3
                 y_all(length(y_all)+1) = y;
                 x_all(length(x_all)+1) = x;
                 counter = counter + 1;
-    % x = 0.5;y = 0.5;z = 0.5;
-                [Q1_x , Q2_x] = IK_3(x, y, z, "X");
-                [Q1_y , Q2_y] = IK_3(x, y, z, "Y");
-                [Q1_z , Q2_z] = IK_3(x, y, z, "Z");
+%     % x = 0.5;y = 0.5;z = 0.5;
+%                 [Q1_x , Q2_x] = IK_3(x, y, z, "X");
+%                 [Q1_y , Q2_y] = IK_3(x, y, z, "Y");
+%                 [Q1_z , Q2_z] = IK_3(x, y, z, "Z");
+% 
+%     %rotation angles 1,2 for each joint in each chain(leg):
+%                 Q1_a={Q1_x;Q1_y;Q1_z};
+%                 Q2_a={Q2_x;Q2_y;Q2_z};
+% 
+%                 
+                
 
-    %rotation angles 1,2 for each joint in each chain(leg):
-                Q1_a={Q1_x;Q1_y;Q1_z};
-                Q2_a={Q2_x;Q2_y;Q2_z};
+                p_global = [x, y, z];
+                
+                q_passive = ikTripteron(T_base, p_global, link, flag);
+
+                % Q = transformStiffness(T_base, p_global, q_passive, link)
+
+
+                [Q1_a, Q2_a] = transformStiffness(T_base, p_global, q_passive, link);
+
+
 
     %Aggregating all the constraints and links and joints:
 
                 for i= 1:3
     % where i is refered to each axis of rotation 1=x, 2=y, 3=z
 
-                    Q1=cell2mat(Q1_a(i));
+                    Q1 = Q1_a(:,:,i);
                     K_11_3=Q1*K_11*transpose(Q1);
                     K_12_3=Q1*K_12*transpose(Q1);
                     K_21_3=Q1*K_21*transpose(Q1);
                     K_22_3=Q1*K_22*transpose(Q1);
 
-                    Q2=cell2mat(Q2_a(i));
+                    Q2 = Q2_a(:,:,i);
                     K_11_5=Q2*K_11*transpose(Q2);
                     K_12_5=Q2*K_12*transpose(Q2);
                     K_21_5=Q2*K_21*transpose(Q2);
@@ -194,8 +230,8 @@ for f = 1:3
                     zeros(6,5*6) -I zeros(6,3*6);
                     zeros(6,6*6) -I zeros(6,2*6);
                     zeros(6,9*6);
-%                     zeros(6,7*6) I I];
-                    zeros(6,7*6) I transpose(D)];
+                    zeros(6,7*6) I I];
+%                     zeros(6,7*6) I transpose(D)];
                     % 
                     %   K_links=[0 I -I 0 0 0 0 0;
                     %            0 0 0 0 0 0 0 0;
@@ -213,8 +249,8 @@ for f = 1:3
                            zeros(6,6*3) K_21_3 K_22_3 zeros(6,6*4);
                            zeros(6,6*5) K_11_5 K_12_5 zeros(6,6*2);
                            zeros(6,6*5) K_21_5 K_22_5 zeros(6,6*2);
-%                            zeros(6,6*7) I -I; %for considering a point that connects all end effector
-                           zeros(6,6*7) D -I; %for considering a rigid
+                           zeros(6,6*7) I -I; %for considering a point that connects all end effector
+%                            zeros(6,6*7) D -I; %for considering a rigid
 %                            platform with specific lenght to center.
                            zeros(6,6*9)];
 
@@ -291,19 +327,33 @@ for f = 1:3
                 all_deflections_y(counter) = delta_t(2,1);
                 all_deflections_z(counter) = delta_t(3,1);
                 Square=[];
+                Kc_all = 0;
                 square = mag_delta_t;
             end
         end
     end
+%     figure;
+%     quiver3(x_all, y_all, z_all,all_deflections_x,all_deflections_y,all_deflections_z,'LineWidth',1)
+%     xlabel("X")
+%     ylabel("Y")
+%     zlabel("Z")
+%    
     figure;
-    quiver3(x_all, y_all, z_all,all_deflections_x,all_deflections_y,all_deflections_z,10,'LineWidth',2)
+    scatter3(x_all, y_all, z_all,40,all_deflections,'filled')    % draw the scatter plot
+    ax = gca;
+    ax.XDir = 'reverse';
+    view(-31,14)
     xlabel("X")
     ylabel("Y")
     zlabel("Z")
-    figure;
-    plot3c(x_all, y_all, z_all,all_deflections,'o')
-    xlabel("X")
-    ylabel("Y")
-    zlabel("Z")
+
+    cb = colorbar;                                     % create and label the colorbar
+    cb.Label.String = 'Deflections Magnitude';
+    
+%     figure;
+%     plot3c(x_all, y_all, z_all,all_deflections,'o')
+%     xlabel("X")
+%     ylabel("Y")
+%     zlabel("Z")
 end
 
