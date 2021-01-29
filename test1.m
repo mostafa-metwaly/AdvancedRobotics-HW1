@@ -7,7 +7,7 @@
 
 clc;
 clear all;
-
+close all;
 
 Square=[];
 Kc_all=0;   
@@ -15,7 +15,7 @@ Kc_all1=0;
 syms E A L G Iz Iy Ip Ka
 E = 7*10^10 ;
 G = 2.55*10^10;
-F = [100 0 0 0 0 0]';
+% F = [100 0 0 0 0 0]';
 L = 1;
 D = 0.15;
 R = 0.075;
@@ -194,6 +194,7 @@ for f = 1:3
                     zeros(6,5*6) -I zeros(6,3*6);
                     zeros(6,6*6) -I zeros(6,2*6);
                     zeros(6,9*6);
+%                     zeros(6,7*6) I I];
                     zeros(6,7*6) I transpose(D)];
                     % 
                     %   K_links=[0 I -I 0 0 0 0 0;
@@ -212,7 +213,9 @@ for f = 1:3
                            zeros(6,6*3) K_21_3 K_22_3 zeros(6,6*4);
                            zeros(6,6*5) K_11_5 K_12_5 zeros(6,6*2);
                            zeros(6,6*5) K_21_5 K_22_5 zeros(6,6*2);
-                           zeros(6,6*7) D -I;
+%                            zeros(6,6*7) I -I; %for considering a point that connects all end effector
+                           zeros(6,6*7) D -I; %for considering a rigid
+%                            platform with specific lenght to center.
                            zeros(6,6*9)];
 
                     lambda_r_12=cell2mat(lambda_r_12_a(i));
@@ -298,7 +301,7 @@ for f = 1:3
     ylabel("Y")
     zlabel("Z")
     figure;
-    plot3c(x_all, y_all, z_all,all_deflections,'O')
+    plot3c(x_all, y_all, z_all,all_deflections,'o')
     xlabel("X")
     ylabel("Y")
     zlabel("Z")
